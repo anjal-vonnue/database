@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model Branch {
+    branchId       BigInt         @id @default(autoincrement())
+    branchName     String         @db.VarChar(200)
+    physicalCopies PhyscialCopy[]
+}
+
+model Book {
+    bookId          BigInt         @id @default(autoincrement())
+    title           String         @db.VarChar(200)
+    isbn            String         @unique @db.VarChar(50)
+    publicationYear Int
+    physicalCopies  PhyscialCopy[]
+    bookAuthors     BookAuthor[]
+}
+
+model PhyscialCopy {
+    physcialCopyId BigInt @id @default(autoincrement())
+    bookId         BigInt
+    branchId       BigInt
+
+    book    Book     @relation(fields: [bookId], references: [bookId])
+    branch  Branch   @relation(fields: [branchId], references: [branchId])
+    borrows Borrow[]
+}
+
+model Author {
+    authorId    BigInt       @id @default(autoincrement())
+    name        String       @db.VarChar(200)
+    email       String       @unique @db.VarChar(200)
+    bookAuthors BookAuthor[]
+}
+
+model BookAuthor {
+    authorId BigInt
+    bookId   BigInt
+    author   Author @relation(fields: [authorId], references: [authorId])
+    book     Book   @relation(fields: [bookId], references: [bookId])
+
+    @@id([authorId, bookId])
+}
+
+model Member {
+    memberId BigInt   @id @default(autoincrement())
+    name     String   @db.VarChar(200)
+    email    String   @unique @db.VarChar(200)
+    borrows  Borrow[]
+}
+
+model Borrow {
+    borrowId       BigInt   @id @default(autoincrement())
+    physcialCopyId BigInt
+    memberId       BigInt
+    borrowedDate   DateTime @db.Date
+    dueDate        DateTime @db.Date
+    returnedDate   DateTime @db.Date
+
+    physicalCopy PhyscialCopy @relation(fields: [physcialCopyId], references: [physcialCopyId])
+    member       Member       @relation(fields: [memberId], references: [memberId])
+}
