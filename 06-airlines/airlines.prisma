@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model Airline {
+    airlineId BigInt   @id @default(autoincrement())
+    name      String   @db.VarChar(200)
+    flights   Flight[]
+}
+
+model Flight {
+    flightId         BigInt   @id @default(autoincrement())
+    flightNumber     String   @db.VarChar(100)
+    departureAirport String   @db.VarChar(100)
+    arrivalAirport   String   @db.VarChar(100)
+    departureTime    DateTime @db.Timestamp(6)
+    arrivalTime      DateTime @db.Timestamp(6)
+    airlineId        BigInt
+
+    airline        Airline         @relation(fields: [airlineId], references: [airlineId])
+    seats          Seat[]
+    flightSegments FlightSegment[]
+
+    @@unique([airlineId, flightNumber])
+}
+
+model Seat {
+    seatId          BigInt            @id @default(autoincrement())
+    seatNumber      String            @db.VarChar(100)
+    flightId        BigInt
+    flight          Flight            @relation(fields: [flightId], references: [flightId])
+    seatAssignments SeatAssignments[]
+
+    @@unique([flightId, seatNumber])
+}
+
+model Customer {
+    customerId   BigInt        @id @default(autoincrement())
+    name         String        @db.VarChar(100)
+    email        String        @unique @db.VarChar(100)
+    reservations Reservation[]
+}
+
+enum StatusType {
+    confirmed
+    cancelled
+    completed
+}
+
+model Reservation {
+    reservationId  BigInt          @id @default(autoincrement())
+    customerId     BigInt
+    status         StatusType      @default(confirmed)
+    customer       Customer        @relation(fields: [customerId], references: [customerId])
+    passengers     Passenger[]
+    flightSegments FlightSegment[]
+}
+
+model Passenger {
+    passengerId     BigInt            @id @default(autoincrement())
+    name            String            @db.VarChar(100)
+    dateOfBirth     String            @db.VarChar(100)
+    passportNumber  String            @unique @db.VarChar(200)
+    reservationId   BigInt
+    reservation     Reservation       @relation(fields: [reservationId], references: [reservationId])
+    seatAssignments SeatAssignments[]
+}
+
+model FlightSegment {
+    flightSegmentId BigInt            @id @default(autoincrement())
+    reservationId   BigInt
+    flightId        BigInt
+    reservation     Reservation       @relation(fields: [reservationId], references: [reservationId])
+    flight          Flight            @relation(fields: [flightId], references: [flightId])
+    seatAssignments SeatAssignments[]
+}
+
+model SeatAssignments {
+    passengerId     BigInt
+    flightSegmentId BigInt
+    seatId          BigInt
+
+    passenger     Passenger     @relation(fields: [passengerId], references: [passengerId])
+    flightSegment FlightSegment @relation(fields: [flightSegmentId], references: [flightSegmentId])
+    seat          Seat          @relation(fields: [seatId], references: [seatId])
+
+    @@id([passengerId, flightSegmentId])
+    @@unique([flightSegmentId, seatId])
+}
