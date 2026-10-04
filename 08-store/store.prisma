@@ -1,0 +1,51 @@
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum OrderStatus {
+    pending
+    paid
+    shipped
+    delivered
+    cancelled
+}
+
+model Customer {
+    customerId BigInt  @id @default(autoincrement())
+    name       String  @db.VarChar(200)
+    email      String  @unique @db.VarChar(200)
+    orders     Order[]
+}
+
+model Product {
+    productId    BigInt      @id @default(autoincrement())
+    productName  String      @db.VarChar(200)
+    prodcutPrice Decimal     @db.Decimal(10, 2)
+    orderItems   OrderItem[]
+}
+
+model Order {
+    orderId    BigInt      @id @default(autoincrement())
+    customerId BigInt
+    status     OrderStatus @default(pending)
+
+    customer   Customer    @relation(fields: [customerId], references: [customerId])
+    orderItems OrderItem[]
+}
+
+model OrderItem {
+    orderId         BigInt
+    productId       BigInt
+    quantity        Int
+    priceAtPurchase Decimal @db.Decimal(10, 2)
+
+    order   Order   @relation(fields: [orderId], references: [orderId])
+    product Product @relation(fields: [productId], references: [productId])
+
+    @@id([orderId, productId])
+}
