@@ -1,0 +1,5 @@
+-- when should i use on delete cascade and on delete restrict
+-- there is a parent and child relation between tables
+-- ON DELETE CASCADE when the child doesn't make sense without the parent
+-- ON DELETE RESTRICT use when deleting the parent should not be allowed while important child records still depend on it
+-- -- if the child represents important historical/business information use restrict
